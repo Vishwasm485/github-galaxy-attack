@@ -12,6 +12,10 @@ shipImg.src = "ship.png";
 const explosionImg = new Image();
 explosionImg.src = "explosion.png";
 
+let imagesLoaded = 0;
+
+shipImg.onload = () => imagesLoaded++;
+explosionImg.onload = () => imagesLoaded++;
 /* GAME STATE */
 
 let ship = {
@@ -172,7 +176,13 @@ explosions.splice(i,1);
 
 function draw(){
 
+
+if(imagesLoaded < 2) return;
+
 ctx.clearRect(0,0,canvas.width,canvas.height);
+
+ctx.drawImage(shipImg, ship.x, ship.y, ship.w, ship.h);
+
 
 /* spaceship */
 
