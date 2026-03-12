@@ -27,7 +27,7 @@ let explosions = [];
 
 let score = 0;
 
-/* GITHUB COLORS */
+/* GitHub contribution colors */
 
 const greens = [
 "#161b22",
@@ -37,59 +37,9 @@ const greens = [
 "#39d353"
 ];
 
-/* LOAD REAL CONTRIBUTIONS */
+/* CREATE CONTRIBUTION GRID */
 
-async function loadContributions(){
-
-const username = "Vishwasm485";
-
-try{
-
-const res = await fetch(
-`https://github-contributions-api.jogruber.de/v4/${username}`
-);
-
-const data = await res.json();
-
-let startX = 60;
-let startY = 50;
-
-let cell = 12;
-let gap = 4;
-
-data.contributions.forEach((week,w)=>{
-
-week.days.forEach((day,d)=>{
-
-let level = day.level;
-
-if(level > 0){
-
-enemies.push({
-x:startX + w*(cell+gap),
-y:startY + d*(cell+gap),
-size:cell,
-color:greens[level]
-});
-
-}
-
-});
-
-});
-
-}catch(e){
-
-console.log("GitHub API failed, using fallback grid");
-generateFallbackGrid();
-
-}
-
-}
-
-/* FALLBACK GRID */
-
-function generateFallbackGrid(){
+function createContributionGrid(){
 
 let cols = 52;
 let rows = 7;
@@ -123,17 +73,7 @@ color:greens[level]
 
 }
 
-loadContributions();
-
-/* SAFETY CHECK */
-
-setTimeout(()=>{
-
-if(enemies.length === 0){
-generateFallbackGrid();
-}
-
-},2000);
+createContributionGrid();
 
 /* CONTROLS */
 
@@ -160,7 +100,7 @@ function update(){
 
 bullets.forEach(b => b.y -= 10);
 
-/* BULLET COLLISION */
+/* COLLISION */
 
 bullets.forEach((b,bi)=>{
 
@@ -193,13 +133,13 @@ document.getElementById("score").innerText =
 
 });
 
-/* EXPLOSION TIMER */
+/* explosion timer */
 
 explosions.forEach((ex,i)=>{
 
 ex.frame++;
 
-if(ex.frame > 20){
+if(ex.frame > 15){
 explosions.splice(i,1);
 }
 
@@ -236,12 +176,7 @@ enemies.forEach(e=>{
 
 ctx.fillStyle = e.color;
 
-ctx.fillRect(
-e.x,
-e.y,
-e.size,
-e.size
-);
+ctx.fillRect(e.x,e.y,e.size,e.size);
 
 });
 
@@ -250,13 +185,7 @@ e.size
 explosions.forEach(ex=>{
 
 if(explosionImg.complete){
-ctx.drawImage(
-explosionImg,
-ex.x-10,
-ex.y-10,
-30,
-30
-);
+ctx.drawImage(explosionImg, ex.x-10, ex.y-10, 30, 30);
 }
 
 });
