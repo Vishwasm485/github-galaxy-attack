@@ -14,20 +14,13 @@ explosionImg.src = "./explosion.png";
 
 /* GAME STATE */
 
-let ship = {
-x:480,
-y:450,
-w:60,
-h:60
-};
-
+let ship = { x:480, y:450, w:60, h:60 };
 let bullets = [];
 let enemies = [];
 let explosions = [];
-
 let score = 0;
 
-/* GitHub contribution colors */
+/* GitHub colors */
 
 const greens = [
 "#161b22",
@@ -37,24 +30,22 @@ const greens = [
 "#39d353"
 ];
 
-/* CREATE CONTRIBUTION GRID */
+/* CREATE GRID (guaranteed visible) */
 
 function createContributionGrid(){
 
-let cols = 52;
+let cols = 40;
 let rows = 7;
 
-let startX = 60;
-let startY = 50;
+let startX = 80;
+let startY = 60;
 
-let cell = 12;
+let cell = 14;
 let gap = 4;
 
 for(let c=0;c<cols;c++){
 
 for(let r=0;r<rows;r++){
-
-if(Math.random() > 0.4){
 
 let level = Math.floor(Math.random()*4)+1;
 
@@ -71,8 +62,6 @@ color:greens[level]
 
 }
 
-}
-
 createContributionGrid();
 
 /* CONTROLS */
@@ -80,16 +69,10 @@ createContributionGrid();
 document.addEventListener("keydown",e=>{
 
 if(e.key==="ArrowLeft") ship.x -= 25;
-
 if(e.key==="ArrowRight") ship.x += 25;
 
 if(e.key===" "){
-
-bullets.push({
-x:ship.x + ship.w/2,
-y:ship.y
-});
-
+bullets.push({ x:ship.x+30, y:ship.y });
 }
 
 });
@@ -113,19 +96,13 @@ b.y > e.y &&
 b.y < e.y + e.size
 ){
 
-explosions.push({
-x:e.x,
-y:e.y,
-frame:0
-});
+explosions.push({ x:e.x, y:e.y, frame:0 });
 
 enemies.splice(ei,1);
 bullets.splice(bi,1);
 
 score++;
-
-document.getElementById("score").innerText =
-"Score: " + score;
+document.getElementById("score").innerText = "Score: " + score;
 
 }
 
@@ -139,7 +116,7 @@ explosions.forEach((ex,i)=>{
 
 ex.frame++;
 
-if(ex.frame > 15){
+if(ex.frame > 12){
 explosions.splice(i,1);
 }
 
@@ -153,7 +130,7 @@ function draw(){
 
 ctx.clearRect(0,0,canvas.width,canvas.height);
 
-/* spaceship */
+/* ship */
 
 if(shipImg.complete){
 ctx.drawImage(shipImg, ship.x, ship.y, ship.w, ship.h);
@@ -165,7 +142,6 @@ ctx.fillRect(ship.x, ship.y, ship.w, ship.h);
 /* bullets */
 
 ctx.fillStyle="red";
-
 bullets.forEach(b=>{
 ctx.fillRect(b.x,b.y,4,12);
 });
@@ -173,21 +149,16 @@ ctx.fillRect(b.x,b.y,4,12);
 /* enemies */
 
 enemies.forEach(e=>{
-
 ctx.fillStyle = e.color;
-
 ctx.fillRect(e.x,e.y,e.size,e.size);
-
 });
 
 /* explosions */
 
 explosions.forEach(ex=>{
-
 if(explosionImg.complete){
 ctx.drawImage(explosionImg, ex.x-10, ex.y-10, 30, 30);
 }
-
 });
 
 }
@@ -198,7 +169,6 @@ function gameLoop(){
 
 update();
 draw();
-
 requestAnimationFrame(gameLoop);
 
 }
