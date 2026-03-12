@@ -7,10 +7,10 @@ canvas.height = 520;
 /* IMAGES */
 
 const shipImg = new Image();
-shipImg.src = "ship.png";
+shipImg.src = "./ship.png";
 
 const explosionImg = new Image();
-explosionImg.src = "explosion.png";
+explosionImg.src = "./explosion.png";
 
 let imagesLoaded = 0;
 
@@ -176,23 +176,16 @@ explosions.splice(i,1);
 
 function draw(){
 
-
-if(imagesLoaded < 2) return;
-
 ctx.clearRect(0,0,canvas.width,canvas.height);
 
-ctx.drawImage(shipImg, ship.x, ship.y, ship.w, ship.h);
+/* draw spaceship */
 
-
-/* spaceship */
-
-ctx.drawImage(
-shipImg,
-ship.x,
-ship.y,
-ship.w,
-ship.h
-);
+if(shipImg.complete){
+    ctx.drawImage(shipImg, ship.x, ship.y, ship.w, ship.h);
+}else{
+    ctx.fillStyle="white";
+    ctx.fillRect(ship.x, ship.y, ship.w, ship.h);
+}
 
 /* bullets */
 
@@ -205,34 +198,19 @@ ctx.fillRect(b.x,b.y,4,12);
 /* enemies */
 
 enemies.forEach(e=>{
-
 ctx.fillStyle = e.color;
-
-ctx.fillRect(
-e.x,
-e.y,
-e.size,
-e.size
-);
-
+ctx.fillRect(e.x,e.y,e.size,e.size);
 });
 
 /* explosions */
 
 explosions.forEach(ex=>{
-
-ctx.drawImage(
-explosionImg,
-ex.x-10,
-ex.y-10,
-30,
-30
-);
-
+if(explosionImg.complete){
+ctx.drawImage(explosionImg, ex.x-10, ex.y-10, 30, 30);
+}
 });
 
 }
-
 /* GAME LOOP */
 
 function gameLoop(){
