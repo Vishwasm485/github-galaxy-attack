@@ -12,17 +12,13 @@ shipImg.src = "./ship.png";
 const explosionImg = new Image();
 explosionImg.src = "./explosion.png";
 
-let imagesLoaded = 0;
-
-shipImg.onload = () => imagesLoaded++;
-explosionImg.onload = () => imagesLoaded++;
 /* GAME STATE */
 
 let ship = {
 x:480,
 y:450,
-w:50,
-h:50
+w:60,
+h:60
 };
 
 let bullets = [];
@@ -41,7 +37,7 @@ const greens = [
 "#39d353"
 ];
 
-/* LOAD REAL GITHUB CONTRIBUTION GRAPH */
+/* LOAD REAL CONTRIBUTIONS */
 
 async function loadContributions(){
 
@@ -84,13 +80,60 @@ color:greens[level]
 
 }catch(e){
 
-console.log("Failed to load contributions");
+console.log("GitHub API failed, using fallback grid");
+generateFallbackGrid();
+
+}
+
+}
+
+/* FALLBACK GRID */
+
+function generateFallbackGrid(){
+
+let cols = 52;
+let rows = 7;
+
+let startX = 60;
+let startY = 50;
+
+let cell = 12;
+let gap = 4;
+
+for(let c=0;c<cols;c++){
+
+for(let r=0;r<rows;r++){
+
+if(Math.random() > 0.4){
+
+let level = Math.floor(Math.random()*4)+1;
+
+enemies.push({
+x:startX + c*(cell+gap),
+y:startY + r*(cell+gap),
+size:cell,
+color:greens[level]
+});
+
+}
+
+}
 
 }
 
 }
 
 loadContributions();
+
+/* SAFETY CHECK */
+
+setTimeout(()=>{
+
+if(enemies.length === 0){
+generateFallbackGrid();
+}
+
+},2000);
 
 /* CONTROLS */
 
@@ -130,20 +173,14 @@ b.y > e.y &&
 b.y < e.y + e.size
 ){
 
-/* explosion */
-
 explosions.push({
 x:e.x,
 y:e.y,
 frame:0
 });
 
-/* remove enemy */
-
 enemies.splice(ei,1);
 bullets.splice(bi,1);
-
-/* score */
 
 score++;
 
@@ -156,16 +193,14 @@ document.getElementById("score").innerText =
 
 });
 
-/* explosion animation */
+/* EXPLOSION TIMER */
 
 explosions.forEach((ex,i)=>{
 
 ex.frame++;
 
 if(ex.frame > 20){
-
 explosions.splice(i,1);
-
 }
 
 });
@@ -178,13 +213,13 @@ function draw(){
 
 ctx.clearRect(0,0,canvas.width,canvas.height);
 
-/* draw spaceship */
+/* spaceship */
 
 if(shipImg.complete){
-    ctx.drawImage(shipImg, ship.x, ship.y, ship.w, ship.h);
+ctx.drawImage(shipImg, ship.x, ship.y, ship.w, ship.h);
 }else{
-    ctx.fillStyle="white";
-    ctx.fillRect(ship.x, ship.y, ship.w, ship.h);
+ctx.fillStyle="white";
+ctx.fillRect(ship.x, ship.y, ship.w, ship.h);
 }
 
 /* bullets */
@@ -198,19 +233,36 @@ ctx.fillRect(b.x,b.y,4,12);
 /* enemies */
 
 enemies.forEach(e=>{
+
 ctx.fillStyle = e.color;
-ctx.fillRect(e.x,e.y,e.size,e.size);
+
+ctx.fillRect(
+e.x,
+e.y,
+e.size,
+e.size
+);
+
 });
 
 /* explosions */
 
 explosions.forEach(ex=>{
+
 if(explosionImg.complete){
-ctx.drawImage(explosionImg, ex.x-10, ex.y-10, 30, 30);
+ctx.drawImage(
+explosionImg,
+ex.x-10,
+ex.y-10,
+30,
+30
+);
 }
+
 });
 
 }
+
 /* GAME LOOP */
 
 function gameLoop(){
