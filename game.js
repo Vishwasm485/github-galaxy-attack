@@ -15,12 +15,14 @@ explosionImg.src = "./explosion.png";
 /* GAME STATE */
 
 let ship = { x:480, y:450, w:60, h:60 };
+
 let bullets = [];
 let enemies = [];
 let explosions = [];
+
 let score = 0;
 
-/* GitHub colors */
+/* COLORS */
 
 const greens = [
 "#161b22",
@@ -30,43 +32,37 @@ const greens = [
 "#39d353"
 ];
 
-/* CREATE GRID (guaranteed visible) */
+/* CREATE GRID */
 
-function createContributionGrid(){
+function createGrid(){
 
 let cols = 45;
 let rows = 7;
 
+let size = 14;
+let gap = 4;
+
 let startX = 120;
 let startY = 60;
 
-let cell = 14;
-let gap = 4;
-
 for(let c=0;c<cols;c++){
-
 for(let r=0;r<rows;r++){
 
 let level = Math.floor(Math.random()*4)+1;
 
-let enemy = {
-x:startX + c*(cell+gap),
-y:startY + r*(cell+gap),
-size:cell,
+enemies.push({
+x:startX + c*(size+gap),
+y:startY + r*(size+gap),
+size:size,
 color:greens[level]
-};
+});
 
-enemies.push(enemy);
-
+}
 }
 
 }
 
-console.log("Enemies created:", enemies.length);
-
-}
-
-createContributionGrid();
+createGrid();
 
 /* CONTROLS */
 
@@ -76,7 +72,12 @@ if(e.key==="ArrowLeft") ship.x -= 25;
 if(e.key==="ArrowRight") ship.x += 25;
 
 if(e.key===" "){
-bullets.push({ x:ship.x+30, y:ship.y });
+bullets.push({
+x:ship.x + ship.w/2 - 2,
+y:ship.y,
+w:4,
+h:12
+});
 }
 
 });
@@ -85,47 +86,40 @@ bullets.push({ x:ship.x+30, y:ship.y });
 
 function update(){
 
-/* move bullets */
+/* MOVE BULLETS */
 
-for(let i=0;i<bullets.length;i++){
-bullets[i].y -= 10;
+for(let b of bullets){
+b.y -= 10;
 }
 
-/* store items to remove */
+/* REMOVE OFFSCREEN BULLETS */
 
-let bulletsToRemove = [];
-let enemiesToRemove = [];
+bullets = bullets.filter(b => b.y > 0);
 
-/* collision detection */
+/* COLLISION */
 
-for(let i = bullets.length - 1; i >= 0; i--){
+for(let i=enemies.length-1;i>=0;i--){
 
-let b = bullets[i];
+let e = enemies[i];
 
-for(let j = enemies.length - 1; j >= 0; j--){
+for(let j=bullets.length-1;j>=0;j--){
 
-let e = enemies[j];
+let b = bullets[j];
 
 if(
 b.x < e.x + e.size &&
-b.x + 4 > e.x &&
+b.x + b.w > e.x &&
 b.y < e.y + e.size &&
-b.y + 12 > e.y
+b.y + b.h > e.y
 ){
 
-explosions.push({
-x:e.x,
-y:e.y,
-frame:0
-});
+explosions.push({x:e.x,y:e.y,frame:0});
 
-enemies.splice(j,1);
-bullets.splice(i,1);
+enemies.splice(i,1);
+bullets.splice(j,1);
 
 score++;
-
-document.getElementById("score").innerText =
-"Score: " + score;
+document.getElementById("score").innerText = "Score: " + score;
 
 break;
 
@@ -134,15 +128,8 @@ break;
 }
 
 }
-/* remove bullets */
 
-bullets = bullets.filter((_,index)=> !bulletsToRemove.includes(index));
-
-/* remove enemies */
-
-enemies = enemies.filter((_,index)=> !enemiesToRemove.includes(index));
-
-/* explosion animation */
+/* EXPLOSION TIMER */
 
 for(let i=explosions.length-1;i>=0;i--){
 
@@ -155,49 +142,56 @@ explosions.splice(i,1);
 }
 
 }
+
+/* DRAW */
+
 function draw(){
 
 ctx.clearRect(0,0,canvas.width,canvas.height);
 
-/* ship */
+/* SHIP */
 
 if(shipImg.complete){
-ctx.drawImage(shipImg, ship.x, ship.y, ship.w, ship.h);
+ctx.drawImage(shipImg,ship.x,ship.y,ship.w,ship.h);
 }else{
 ctx.fillStyle="white";
-ctx.fillRect(ship.x, ship.y, ship.w, ship.h);
+ctx.fillRect(ship.x,ship.y,ship.w,ship.h);
 }
 
-/* bullets */
+/* BULLETS */
 
 ctx.fillStyle="red";
-bullets.forEach(b=>{
-ctx.fillRect(b.x,b.y,4,12);
-});
 
-/* enemies */
+for(let b of bullets){
+ctx.fillRect(b.x,b.y,b.w,b.h);
+}
 
-enemies.forEach(e=>{
+/* ENEMIES */
+
+for(let e of enemies){
 ctx.fillStyle = e.color;
 ctx.fillRect(e.x,e.y,e.size,e.size);
-});
+}
 
-/* explosions */
+/* EXPLOSIONS */
 
-explosions.forEach(ex=>{
+for(let ex of explosions){
+
 if(explosionImg.complete){
-ctx.drawImage(explosionImg, ex.x-10, ex.y-10, 30, 30);
+ctx.drawImage(explosionImg,ex.x-10,ex.y-10,30,30);
 }
-});
+
+}
 
 }
 
-/* GAME LOOP */
+/* LOOP */
 
 function gameLoop(){
 
 update();
 draw();
+
 requestAnimationFrame(gameLoop);
 
 }
