@@ -87,17 +87,22 @@ function update(){
 
 /* move bullets */
 
-for(let i = 0; i < bullets.length; i++){
+for(let i=0;i<bullets.length;i++){
 bullets[i].y -= 10;
 }
 
+/* store items to remove */
+
+let bulletsToRemove = [];
+let enemiesToRemove = [];
+
 /* collision detection */
 
-for(let i = bullets.length - 1; i >= 0; i--){
+for(let i=0;i<bullets.length;i++){
 
 let b = bullets[i];
 
-for(let j = enemies.length - 1; j >= 0; j--){
+for(let j=0;j<enemies.length;j++){
 
 let e = enemies[j];
 
@@ -108,20 +113,14 @@ b.y > e.y &&
 b.y < e.y + e.size
 ){
 
-/* create explosion */
-
 explosions.push({
 x:e.x,
 y:e.y,
 frame:0
 });
 
-/* remove enemy + bullet safely */
-
-enemies.splice(j,1);
-bullets.splice(i,1);
-
-/* update score */
+bulletsToRemove.push(i);
+enemiesToRemove.push(j);
 
 score++;
 
@@ -136,9 +135,17 @@ break;
 
 }
 
+/* remove bullets */
+
+bullets = bullets.filter((_,index)=> !bulletsToRemove.includes(index));
+
+/* remove enemies */
+
+enemies = enemies.filter((_,index)=> !enemiesToRemove.includes(index));
+
 /* explosion animation */
 
-for(let i = explosions.length - 1; i >= 0; i--){
+for(let i=explosions.length-1;i>=0;i--){
 
 explosions[i].frame++;
 
@@ -149,7 +156,6 @@ explosions.splice(i,1);
 }
 
 }
-
 function draw(){
 
 ctx.clearRect(0,0,canvas.width,canvas.height);
