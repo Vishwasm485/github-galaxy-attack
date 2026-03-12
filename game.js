@@ -1,199 +1,153 @@
+
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
 canvas.width = 1000;
 canvas.height = 520;
 
-/* IMAGES */
-
+/* ── images ── */
 const shipImg = new Image();
 shipImg.src = "./ship.png";
 
 const explosionImg = new Image();
 explosionImg.src = "./explosion.png";
 
-/* GAME STATE */
-
-let ship = { x:480, y:450, w:60, h:60 };
-
-let bullets = [];
-let enemies = [];
+/* ── state ── */
+let ship = { x: 480, y: 450, w: 60, h: 60 };
+let bullets    = [];
+let enemies    = [];
 let explosions = [];
+let score      = 0;
 
-let score = 0;
+/* ── github colours ── */
+const greens = ["#161b22","#0e4429","#006d32","#26a641","#39d353"];
 
-/* COLORS */
+/* ── build enemy grid ── */
+function createGrid() {
+  const cols = 40, rows = 7;
+  const startX = 150, startY = 180;
+  const size = 14, gap = 4;
 
-const greens = [
-"#161b22",
-"#0e4429",
-"#006d32",
-"#26a641",
-"#39d353"
-];
-
-/* CREATE GRID */
-
-function createGrid(){
-
-let cols = 45;
-let rows = 7;
-
-let size = 14;
-let gap = 4;
-
-let startX = 120;
-let startY = 60;
-
-for(let c=0;c<cols;c++){
-for(let r=0;r<rows;r++){
-
-let level = Math.floor(Math.random()*4)+1;
-
-enemies.push({
-x:startX + c*(size+gap),
-y:startY + r*(size+gap),
-size:size,
-color:greens[level]
-});
-
+  for (let c = 0; c < cols; c++) {
+    for (let r = 0; r < rows; r++) {
+      const level = Math.floor(Math.random() * 4) + 1;
+      enemies.push({
+        x: startX + c * (size + gap),
+        y: startY + r * (size + gap),
+        w: size,
+        h: size,
+        color: greens[level]
+      });
+    }
+  }
 }
-}
-
-}
-
 createGrid();
 
-/* CONTROLS */
+/* ── keyboard ── */
+const keys = {};
 
-document.addEventListener("keydown",e=>{
+document.addEventListener("keydown", e => {
+  keys[e.key] = true;
 
-if(e.key==="ArrowLeft") ship.x -= 25;
-if(e.key==="ArrowRight") ship.x += 25;
+  if (e.key === " ") {
+    bullets.push({
+      x: ship.x + ship.w / 2 - 2,
+      y: ship.y,
+      w: 4,
+      h: 12
+    });
+  }
 
-if(e.key===" "){
-bullets.push({
-x:ship.x + ship.w/2 - 2,
-y:ship.y,
-w:4,
-h:12
+  if ([" ","ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key)) {
+    e.preventDefault();
+  }
 });
-}
 
+document.addEventListener("keyup", e => {
+  keys[e.key] = false;
 });
 
-/* UPDATE */
-
-function update(){
-
-/* MOVE BULLETS */
-
-for(let b of bullets){
-b.y -= 10;
+/* ── AABB overlap check ── */
+function overlaps(ax, ay, aw, ah, bx, by, bw, bh) {
+  return ax < bx + bw
+      && ax + aw > bx
+      && ay < by + bh
+      && ay + ah > by;
 }
 
-/* REMOVE OFFSCREEN BULLETS */
+/* ── update ── */
+function update() {
 
-bullets = bullets.filter(b => b.y > 0);
+  if (keys["ArrowLeft"])  ship.x -= 5;
+  if (keys["ArrowRight"]) ship.x += 5;
+  ship.x = Math.max(0, Math.min(canvas.width - ship.w, ship.x));
 
-/* COLLISION */
+  for (const b of bullets) b.y -= 8;
+  bullets = bullets.filter(b => b.y + b.h > 0);
 
-for(let i=enemies.length-1;i>=0;i--){
+  for (let i = enemies.length - 1; i >= 0; i--) {
+    const en = enemies[i];
+    for (let j = bullets.length - 1; j >= 0; j--) {
+      const bu = bullets[j];
+      if (overlaps(bu.x, bu.y, bu.w, bu.h, en.x, en.y, en.w, en.h)) {
+        explosions.push({ x: en.x, y: en.y, timer: 12 });
+        enemies.splice(i, 1);
+        bullets.splice(j, 1);
+        score++;
+        document.getElementById("score").innerText = "Score: " + score;
+        break;
+      }
+    }
+  }
 
-let e = enemies[i];
-
-for(let j=bullets.length-1;j>=0;j--){
-
-let b = bullets[j];
-
-if(
-b.x < e.x + e.size &&
-b.x + b.w > e.x &&
-b.y < e.y + e.size &&
-b.y + b.h > e.y
-){
-
-explosions.push({x:e.x,y:e.y,frame:0});
-
-enemies.splice(i,1);
-bullets.splice(j,1);
-
-score++;
-document.getElementById("score").innerText = "Score: " + score;
-
-break;
-
+  for (let i = explosions.length - 1; i >= 0; i--) {
+    explosions[i].timer--;
+    if (explosions[i].timer <= 0) explosions.splice(i, 1);
+  }
 }
 
+/* ── draw ── */
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (shipImg.complete && shipImg.naturalWidth > 0) {
+    ctx.drawImage(shipImg, ship.x, ship.y, ship.w, ship.h);
+  } else {
+    ctx.fillStyle = "white";
+    ctx.fillRect(ship.x, ship.y, ship.w, ship.h);
+  }
+
+  ctx.fillStyle = "red";
+  for (const b of bullets) ctx.fillRect(b.x, b.y, b.w, b.h);
+
+  for (const en of enemies) {
+    ctx.fillStyle = en.color;
+    ctx.fillRect(en.x, en.y, en.w, en.h);
+  }
+
+  for (const ex of explosions) {
+    if (explosionImg.complete && explosionImg.naturalWidth > 0) {
+      ctx.globalAlpha = ex.timer / 12;
+      ctx.drawImage(explosionImg, ex.x - 10, ex.y - 10, 34, 34);
+      ctx.globalAlpha = 1;
+    } else {
+      ctx.fillStyle = `rgba(255,160,0,${ex.timer / 12})`;
+      ctx.fillRect(ex.x - 4, ex.y - 4, 22, 22);
+    }
+  }
 }
 
+/* ── game loop (60 fps) ── */
+let lastTime = 0;
+
+function gameLoop(timestamp) {
+  const delta = timestamp - lastTime;
+  if (delta >= 1000 / 60) {
+    lastTime = timestamp - (delta % (1000 / 60));
+    update();
+    draw();
+  }
+  requestAnimationFrame(gameLoop);
 }
 
-/* EXPLOSION TIMER */
-
-for(let i=explosions.length-1;i>=0;i--){
-
-explosions[i].frame++;
-
-if(explosions[i].frame > 12){
-explosions.splice(i,1);
-}
-
-}
-
-}
-
-/* DRAW */
-
-function draw(){
-
-ctx.clearRect(0,0,canvas.width,canvas.height);
-
-/* SHIP */
-
-if(shipImg.complete){
-ctx.drawImage(shipImg,ship.x,ship.y,ship.w,ship.h);
-}else{
-ctx.fillStyle="white";
-ctx.fillRect(ship.x,ship.y,ship.w,ship.h);
-}
-
-/* BULLETS */
-
-ctx.fillStyle="red";
-
-for(let b of bullets){
-ctx.fillRect(b.x,b.y,b.w,b.h);
-}
-
-/* ENEMIES */
-
-for(let e of enemies){
-ctx.fillStyle = e.color;
-ctx.fillRect(e.x,e.y,e.size,e.size);
-}
-
-/* EXPLOSIONS */
-
-for(let ex of explosions){
-
-if(explosionImg.complete){
-ctx.drawImage(explosionImg,ex.x-10,ex.y-10,30,30);
-}
-
-}
-
-}
-
-/* LOOP */
-
-function gameLoop(){
-
-update();
-draw();
-
-requestAnimationFrame(gameLoop);
-
-}
-
-gameLoop();
+gameLoop(0);
