@@ -9,53 +9,73 @@ let bullets = [];
 let enemies = [];
 
 // fetch github contributions
-async function loadContributions(){
+async function loadContributions() {
 
-const res = await fetch("https://github-contributions-api.jogruber.de/v4/Vishwasm485");
+const username = "Vishwasm485";
 
+try {
+
+const res = await fetch(`https://github-contributions-api.jogruber.de/v4/${username}`);
 const data = await res.json();
 
-let x = 50;
-let y = 50;
+let startX = 60;
+let startY = 40;
+let cell = 14;
+let gap = 4;
 
-data.contributions.forEach(week => {
+data.contributions.forEach((week, w) => {
 
-    week.days.forEach(day => {
+    week.days.forEach((day, d) => {
 
         if(day.count > 0){
 
             enemies.push({
-                x:x,
-                y:y,
-                size:12
+                x: startX + w * (cell + gap),
+                y: startY + d * (cell + gap),
+                size: cell
             });
 
         }
 
-        y += 15;
-
     });
 
-    y = 50;
-    x += 15;
-
 });
+
+} catch(err) {
+
+console.log("Contribution API failed");
+
+generateFakeGrid();
 
 }
 
-loadContributions();
+}
+function generateFakeGrid(){
 
-document.addEventListener("keydown",e=>{
+let startX = 60;
+let startY = 40;
+let cell = 14;
+let gap = 4;
 
-if(e.key === "ArrowLeft") ship.x -= 20;
-if(e.key === "ArrowRight") ship.x += 20;
+for(let w=0; w<20; w++){
 
-if(e.key === " "){
-    bullets.push({x:ship.x+20,y:ship.y});
+    for(let d=0; d<7; d++){
+
+        if(Math.random() > 0.4){
+
+            enemies.push({
+                x: startX + w * (cell + gap),
+                y: startY + d * (cell + gap),
+                size: cell
+            });
+
+        }
+
+    }
+
 }
 
-});
-
+}
 function update(){
 
 bullets.forEach(b => b.y -= 6);
@@ -91,10 +111,11 @@ ctx.fillStyle="red";
 bullets.forEach(b=>ctx.fillRect(b.x,b.y,4,10));
 
 // contribution enemies
-ctx.fillStyle="lime";
+ctx.fillStyle="#39d353";
+
 enemies.forEach(e=>{
-ctx.fillRect(e.x,e.y,e.size,e.size)
-})
+ctx.fillRect(e.x,e.y,e.size,e.size);
+});
 
 }
 
