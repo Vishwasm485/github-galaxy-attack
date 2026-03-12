@@ -34,10 +34,10 @@ const greens = [
 
 function createContributionGrid(){
 
-let cols = 40;
+let cols = 45;
 let rows = 7;
 
-let startX = 80;
+let startX = 120;
 let startY = 60;
 
 let cell = 14;
@@ -49,16 +49,20 @@ for(let r=0;r<rows;r++){
 
 let level = Math.floor(Math.random()*4)+1;
 
-enemies.push({
+let enemy = {
 x:startX + c*(cell+gap),
 y:startY + r*(cell+gap),
 size:cell,
 color:greens[level]
-});
+};
+
+enemies.push(enemy);
 
 }
 
 }
+
+console.log("Enemies created:", enemies.length);
 
 }
 
@@ -81,13 +85,21 @@ bullets.push({ x:ship.x+30, y:ship.y });
 
 function update(){
 
-bullets.forEach(b => b.y -= 10);
+/* move bullets */
 
-/* COLLISION */
+for(let i = 0; i < bullets.length; i++){
+bullets[i].y -= 10;
+}
 
-bullets.forEach((b,bi)=>{
+/* collision detection */
 
-enemies.forEach((e,ei)=>{
+for(let i = bullets.length - 1; i >= 0; i--){
+
+let b = bullets[i];
+
+for(let j = enemies.length - 1; j >= 0; j--){
+
+let e = enemies[j];
 
 if(
 b.x > e.x &&
@@ -96,35 +108,47 @@ b.y > e.y &&
 b.y < e.y + e.size
 ){
 
-explosions.push({ x:e.x, y:e.y, frame:0 });
+/* create explosion */
 
-enemies.splice(ei,1);
-bullets.splice(bi,1);
+explosions.push({
+x:e.x,
+y:e.y,
+frame:0
+});
+
+/* remove enemy + bullet safely */
+
+enemies.splice(j,1);
+bullets.splice(i,1);
+
+/* update score */
 
 score++;
-document.getElementById("score").innerText = "Score: " + score;
+
+document.getElementById("score").innerText =
+"Score: " + score;
+
+break;
 
 }
 
-});
+}
 
-});
+}
 
-/* explosion timer */
+/* explosion animation */
 
-explosions.forEach((ex,i)=>{
+for(let i = explosions.length - 1; i >= 0; i--){
 
-ex.frame++;
+explosions[i].frame++;
 
-if(ex.frame > 12){
+if(explosions[i].frame > 12){
 explosions.splice(i,1);
 }
 
-});
-
 }
 
-/* DRAW */
+}
 
 function draw(){
 
