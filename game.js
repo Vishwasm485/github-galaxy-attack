@@ -98,19 +98,19 @@ let enemiesToRemove = [];
 
 /* collision detection */
 
-for(let i=0;i<bullets.length;i++){
+for(let i = bullets.length - 1; i >= 0; i--){
 
 let b = bullets[i];
 
-for(let j=0;j<enemies.length;j++){
+for(let j = enemies.length - 1; j >= 0; j--){
 
 let e = enemies[j];
 
 if(
-b.x > e.x &&
 b.x < e.x + e.size &&
-b.y > e.y &&
-b.y < e.y + e.size
+b.x + 4 > e.x &&
+b.y < e.y + e.size &&
+b.y + 12 > e.y
 ){
 
 explosions.push({
@@ -119,8 +119,8 @@ y:e.y,
 frame:0
 });
 
-bulletsToRemove.push(i);
-enemiesToRemove.push(j);
+enemies.splice(j,1);
+bullets.splice(i,1);
 
 score++;
 
@@ -134,7 +134,6 @@ break;
 }
 
 }
-
 /* remove bullets */
 
 bullets = bullets.filter((_,index)=> !bulletsToRemove.includes(index));
