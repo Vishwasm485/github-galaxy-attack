@@ -4,10 +4,15 @@ const ctx = canvas.getContext("2d");
 canvas.width = 1000;
 canvas.height = 520;
 
-let shipImg = new Image();
+/* IMAGES */
+
+const shipImg = new Image();
 shipImg.src = "ship.png";
 
-let score = 0;
+const explosionImg = new Image();
+explosionImg.src = "explosion.png";
+
+/* GAME STATE */
 
 let ship = {
 x:480,
@@ -20,6 +25,10 @@ let bullets = [];
 let enemies = [];
 let explosions = [];
 
+let score = 0;
+
+/* GITHUB COLORS */
+
 const greens = [
 "#161b22",
 "#0e4429",
@@ -28,56 +37,69 @@ const greens = [
 "#39d353"
 ];
 
-/* Create real GitHub layout */
+/* LOAD REAL GITHUB CONTRIBUTION GRAPH */
 
-function createContributionGrid(){
+async function loadContributions(){
 
-let cols = 52;
-let rows = 7;
+const username = "Vishwasm485";
 
-let cell = 12;
-let gap = 4;
+try{
+
+const res = await fetch(
+`https://github-contributions-api.jogruber.de/v4/${username}`
+);
+
+const data = await res.json();
 
 let startX = 60;
 let startY = 50;
 
-for(let c=0;c<cols;c++){
+let cell = 12;
+let gap = 4;
 
-for(let r=0;r<rows;r++){
+data.contributions.forEach((week,w)=>{
 
-let activity = Math.floor(Math.random()*5);
+week.days.forEach((day,d)=>{
 
-if(activity>0){
+let level = day.level;
+
+if(level > 0){
 
 enemies.push({
-x:startX+c*(cell+gap),
-y:startY+r*(cell+gap),
+x:startX + w*(cell+gap),
+y:startY + d*(cell+gap),
 size:cell,
-color:greens[activity]
+color:greens[level]
 });
 
 }
 
-}
+});
+
+});
+
+}catch(e){
+
+console.log("Failed to load contributions");
 
 }
 
 }
 
-createContributionGrid();
+loadContributions();
 
-/* Controls */
+/* CONTROLS */
 
 document.addEventListener("keydown",e=>{
 
-if(e.key==="ArrowLeft") ship.x-=25;
+if(e.key==="ArrowLeft") ship.x -= 25;
 
-if(e.key==="ArrowRight") ship.x+=25;
+if(e.key==="ArrowRight") ship.x += 25;
 
 if(e.key===" "){
 
 bullets.push({
-x:ship.x+22,
+x:ship.x + ship.w/2,
 y:ship.y
 });
 
@@ -85,22 +107,26 @@ y:ship.y
 
 });
 
-/* Update */
+/* UPDATE */
 
 function update(){
 
-bullets.forEach(b=>b.y-=10);
+bullets.forEach(b => b.y -= 10);
+
+/* BULLET COLLISION */
 
 bullets.forEach((b,bi)=>{
 
 enemies.forEach((e,ei)=>{
 
 if(
-b.x>e.x &&
-b.x<e.x+e.size &&
-b.y>e.y &&
-b.y<e.y+e.size
+b.x > e.x &&
+b.x < e.x + e.size &&
+b.y > e.y &&
+b.y < e.y + e.size
 ){
+
+/* explosion */
 
 explosions.push({
 x:e.x,
@@ -108,11 +134,17 @@ y:e.y,
 frame:0
 });
 
+/* remove enemy */
+
 enemies.splice(ei,1);
 bullets.splice(bi,1);
 
+/* score */
+
 score++;
-document.getElementById("score").innerText="Score: "+score;
+
+document.getElementById("score").innerText =
+"Score: " + score;
 
 }
 
@@ -120,19 +152,37 @@ document.getElementById("score").innerText="Score: "+score;
 
 });
 
-explosions.forEach(ex=>ex.frame++);
+/* explosion animation */
+
+explosions.forEach((ex,i)=>{
+
+ex.frame++;
+
+if(ex.frame > 20){
+
+explosions.splice(i,1);
 
 }
 
-/* Draw */
+});
+
+}
+
+/* DRAW */
 
 function draw(){
 
 ctx.clearRect(0,0,canvas.width,canvas.height);
 
-/* draw spaceship */
+/* spaceship */
 
-ctx.drawImage(shipImg,ship.x,ship.y,ship.w,ship.h);
+ctx.drawImage(
+shipImg,
+ship.x,
+ship.y,
+ship.w,
+ship.h
+);
 
 /* bullets */
 
@@ -146,8 +196,14 @@ ctx.fillRect(b.x,b.y,4,12);
 
 enemies.forEach(e=>{
 
-ctx.fillStyle=e.color;
-ctx.fillRect(e.x,e.y,e.size,e.size);
+ctx.fillStyle = e.color;
+
+ctx.fillRect(
+e.x,
+e.y,
+e.size,
+e.size
+);
 
 });
 
@@ -155,21 +211,25 @@ ctx.fillRect(e.x,e.y,e.size,e.size);
 
 explosions.forEach(ex=>{
 
-ctx.beginPath();
-ctx.arc(ex.x+6,ex.y+6,ex.frame*2,0,Math.PI*2);
-ctx.strokeStyle="orange";
-ctx.stroke();
+ctx.drawImage(
+explosionImg,
+ex.x-10,
+ex.y-10,
+30,
+30
+);
 
 });
 
 }
 
-/* Game loop */
+/* GAME LOOP */
 
 function gameLoop(){
 
 update();
 draw();
+
 requestAnimationFrame(gameLoop);
 
 }
